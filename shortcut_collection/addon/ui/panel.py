@@ -18,10 +18,8 @@ class MainPanel(bpy.types.Panel):
         layout = self.layout
 
         for module in modules:
-            try:
+            if hasattr(module, 'panelDraw'):
                 module.panelDraw(context, act, layout)
-            except:
-                pass
 
 def popover(self, context: bpy.types.Context):
     layout = self.layout
