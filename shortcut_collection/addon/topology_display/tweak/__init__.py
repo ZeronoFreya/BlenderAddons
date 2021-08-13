@@ -51,14 +51,14 @@ class Tweak(bpy.types.Operator):
                     self.update = brushFalloff.update_falloff
                 elif event.value == 'RELEASE':
                     self.lmb = False
-                    self.f_press = False
             
             return {"RUNNING_MODAL"}
 
-        p,n,i,d = tweakCore.ray_cast_sources(Vector((event.mouse_region_x, event.mouse_region_y)))
-        brushFalloff.update_center( p, n)
+        
         
         if event.type == 'MOUSEMOVE':
+            p,n,i,d = tweakCore.ray_cast_sources(Vector((event.mouse_region_x, event.mouse_region_y)))
+            brushFalloff.update_center( p, n)
             if self.lmb:
                 tweakCore.drag(
                     Vector((event.mouse_region_x, event.mouse_region_y)), 
@@ -80,6 +80,7 @@ class Tweak(bpy.types.Operator):
         # elif event.type == 'WHEELDOWNMOUSE' or event.type == 'WHEELUPMOUSE':
         #     brushFalloff.update_scale(p)
         elif event.type == "F":
+            self.lmb = False
             self.f_press = True
             self.update = brushFalloff.update_radius
             brushFalloff.update_start(Vector((event.mouse_region_x, event.mouse_region_y)))

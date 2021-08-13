@@ -63,7 +63,6 @@ batch = batch_for_shader(
 
 float_inf = float('inf')
 
-draw_handler = None
 
 class BrushFalloff:
 
@@ -83,27 +82,26 @@ class BrushFalloff:
         self.rgn = context.region
         self.r3d = context.space_data.region_3d
         self.matrix = context.region_data.perspective_matrix
-        if draw_handler:
-            try:
-                bpy.types.SpaceView3D.draw_handler_remove(draw_handler, 'WINDOW')
-            except:
-                pass
+        
 
     def update_center(self, p=None, n=None):
         if p: self.point = p
         if n: self.normal = n
     
     def update_radius(self, mouse=None):
+        print("radius")
         if not mouse: return
         self.radius = min(300, max(1, (mouse - self.mouse).length))
     
     def update_falloff(self, mouse=None):
+        print("falloff")
         if not mouse: return
         d = max(1, min(self.radius, (mouse - self.mouse).length )) / self.radius
         self.falloff = mLog(0.5) / mLog(max(0.01, min(0.99, d )))
     
     def update_start(self, mouse):
         self.mouse = mouse
+
     def update_end(self):
         self.mouse = None
 
@@ -172,7 +170,7 @@ class BrushFalloff:
         bgl.glDepthRange(0.0, 1.0)
 
     def show(self):
-        draw_handler = self._handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_brush, (), 'WINDOW', 'POST_VIEW')
+        self._handler = bpy.types.SpaceView3D.draw_handler_add(self.draw_brush, (), 'WINDOW', 'POST_VIEW')
     
     def close(self):
         bpy.types.SpaceView3D.draw_handler_remove(self._handler, 'WINDOW')
