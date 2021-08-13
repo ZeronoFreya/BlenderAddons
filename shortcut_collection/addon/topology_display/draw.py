@@ -19,3 +19,6 @@ def panelDraw(context, object, layout):
         row.operator("shortcut_collection.topology_display_occlude_wire", text="隐藏线框", icon="CHECKBOX_HLT" if overlay.show_occlude_wire else "CHECKBOX_DEHLT")
         row.operator("shortcut_collection.topology_display_in_front", text="在前面", icon="CHECKBOX_HLT" if object.show_in_front else "CHECKBOX_DEHLT") 
         row.operator("shortcut_collection.topology_display_wireframe_opacity", text="线框透明", icon="CHECKBOX_HLT" if overlay.wireframe_opacity < 1 else "CHECKBOX_DEHLT") 
+
+        row = layout.row()
+        row.operator("shortcut_collection.topology_display_tweak", text="tweak")

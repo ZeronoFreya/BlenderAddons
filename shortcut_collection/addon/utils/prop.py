@@ -1,7 +1,5 @@
 import bpy
-# from rna_prop_ui import rna_idprop_ui_prop_get
 from ast import literal_eval
-# from re import match
 from idprop.types import (IDPropertyArray, IDPropertyGroup)
 
 defParameters = {
@@ -22,12 +20,18 @@ def __add_prop(propData, key:str, val, info):
     if(key not in propData):
         propData[key] = val
         rna_ui[key] = defParameters.update(info)
-    # print(type(scene[key]),"^^^^^^^^")
     return propData[key]
 
 
 
 def __get_prop(propData, key:str, default):
+    try:
+        rna_ui = propData.get('_RNA_UI')
+        if rna_ui is None:
+            rna_ui = propData['_RNA_UI'] = {}
+            return None
+    except:
+        return None
     rna_ui = propData.get('_RNA_UI')
     if rna_ui is None:
         rna_ui = propData['_RNA_UI'] = {}
@@ -99,7 +103,6 @@ def __set_prop(propData, key:str, val):
             lastK = k
             i += 1
             continue
-        # # print(lastK, data, i, "<<<<<<<<<<<<<<<<")
         if(k == "push"):
             if(isinstance(data[lastK], IDPropertyArray)):
                 k = len(data[lastK])
@@ -123,23 +126,12 @@ def __set_prop(propData, key:str, val):
             
             data = data[lastK] 
             lastK = num if isinstance(data, IDPropertyArray) else k
-            # print(lastK, data, type(data), "$$$$$$$$$$$$$$$$$")
         except (SyntaxError, ValueError):
-            # print(lastK, data, type(data), "!!!!!!!!!!!!!!")
             if(lastK not in data):
                 data[lastK] = {}
             data = data[lastK] 
             lastK = k[1:] if k.startswith("!") else k
-            # print(lastK, data, type(data), "??????????????")
         i += 1
-    # print(lastK, type(lastK), data, type(data), "###############################")
-    # if(lastK == "push"):
-    #     if(isinstance(data, IDPropertyArray)):
-    #         newList = data.to_list()
-    #         newList.append(val)
-    #         data[lastK] = newList
-    #     else:
-    #         return False
     data[lastK] = val
     return data[lastK]
 

@@ -1,7 +1,6 @@
 import bpy
 from . import panel
 
-
 classes = (
     panel.MainPanel,
 )

@@ -1,6 +1,7 @@
 import bpy
 from bpy.app.handlers import persistent
 from .. import utils
+from . import tweak
 
 from .draw import panelDraw
 
@@ -137,6 +138,8 @@ def register():
     bpy.utils.register_class(TopologyDisplayOccludeWire)
     bpy.utils.register_class(TopologyDisplayInFront)
     bpy.utils.register_class(TopologyDisplayWireframeOpacity)
+    # bpy.utils.register_class(Tweak)
+    tweak.register()
     bpy.app.handlers.load_post.append(load_handler)
         
 def unregister():
@@ -144,4 +147,6 @@ def unregister():
     bpy.utils.unregister_class(TopologyDisplayOccludeWire)
     bpy.utils.unregister_class(TopologyDisplayInFront)
     bpy.utils.unregister_class(TopologyDisplayWireframeOpacity)
+    # bpy.utils.unregister_class(Tweak)
+    tweak.unregister()
         
