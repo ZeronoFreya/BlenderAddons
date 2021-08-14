@@ -65,14 +65,8 @@ float_inf = float('inf')
 
 
 class BrushFalloff:
-
-    def __init__(self, radius, falloff, strength, fill_color=Vector((1,1,1,1)), outer_color=Vector((1,1,1,1)), inner_color=Vector((1,1,1,0.5))):
-        self.radius = radius
-        self.falloff = min(100, max(1, float(falloff)))
-        self.strength = strength
-        self.outer_color = outer_color
-        self.inner_color = inner_color
-        self.fill_color = fill_color
+    
+    def __init__(self):
         self.point = None
         self._handler = None
         self.scale = 1.0
@@ -82,22 +76,28 @@ class BrushFalloff:
         self.rgn = context.region
         self.r3d = context.space_data.region_3d
         self.matrix = context.region_data.perspective_matrix
-        
+        self.prefs = context.preferences.addons["shortcut_collection"].preferences        
 
     def update_center(self, p=None, n=None):
-        if p: self.point = p
+        self.point = p
         if n: self.normal = n
     
+    def set_radius(self, radius):
+        if isinstance(radius, int):
+            self.prefs.topo_tweak_radius = radius
+
     def update_radius(self, mouse=None):
-        print("radius")
         if not mouse: return
-        self.radius = min(300, max(1, (mouse - self.mouse).length))
+        self.set_radius(int((mouse - self.mouse).length))
+    
+    def set_falloff(self, falloff):
+        if isinstance(falloff, float):
+            self.prefs.topo_tweak_falloff = falloff
     
     def update_falloff(self, mouse=None):
-        print("falloff")
         if not mouse: return
-        d = max(1, min(self.radius, (mouse - self.mouse).length )) / self.radius
-        self.falloff = mLog(0.5) / mLog(max(0.01, min(0.99, d )))
+        radius = self.prefs.topo_tweak_radius
+        self.set_falloff(min(radius, (mouse - self.mouse).length ) / radius)
     
     def update_start(self, mouse):
         self.mouse = mouse
@@ -153,10 +153,11 @@ class BrushFalloff:
         x.normalize()
         y.normalize()
 
-        r = self.radius
+        r = self.prefs.topo_tweak_radius
+        cc = (*self.prefs.topo_tweak_fill_color[:3], self.prefs.topo_tweak_fill_color[3] * self.prefs.topo_tweak_strength * 0.60 + 0.10)
 
-        cc = self.fill_color * Vector((1, 1, 1, self.strength * 0.60 + 0.10))
-        ff = mPow(0.5, 1.0 / self.falloff)
+        ff = mLog(0.5) / mLog(max(0.01, min(0.99, self.prefs.topo_tweak_falloff )))
+        ff = mPow(0.5, 1.0 / ff)
         fs = (1-ff) * r * scale
 
         bgl.glDepthRange(0.0, 0.99996)
@@ -164,9 +165,9 @@ class BrushFalloff:
         self.draw3D_circle(self.point, r*scale - fs, cc, fs, x, y)
         bgl.glDepthRange(0.0, 0.99995)
         # 外边框
-        self.draw3D_circle(self.point, r*scale, self.outer_color, 2*scale, x, y)
+        self.draw3D_circle(self.point, r*scale, self.prefs.topo_tweak_outer_color, 2*scale, x, y)
         # 内边框
-        self.draw3D_circle(self.point, r*scale*ff, self.inner_color, 2*scale, x, y)
+        self.draw3D_circle(self.point, r*scale*ff, self.prefs.topo_tweak_inner_color, 2*scale, x, y)
         bgl.glDepthRange(0.0, 1.0)
 
     def show(self):

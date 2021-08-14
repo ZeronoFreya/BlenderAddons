@@ -66,12 +66,13 @@ def mode_change(object, *args):
     elif(object.mode == "EDIT"):
         add(bpy.context)
 
-
 class TopologyDisplay(bpy.types.Operator):
     """拓扑视图优化"""
     bl_idname = "shortcut_collection.topology_display"
     bl_label = "Topology Display"
     bl_options = {'REGISTER'}    
+
+    
 
     def execute(self, context):
         if(context.area.type == "VIEW_3D"):

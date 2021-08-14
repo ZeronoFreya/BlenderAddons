@@ -2,8 +2,9 @@ import bpy
 from mathutils import Vector
 from .brushfalloff import BrushFalloff
 from .core import TweakCore
+from ...utils.addon import get_visible_objs
 
-brushFalloff = BrushFalloff(50, 1.5, 0.5, Vector((1,0.565,0.31,0.239)), Vector((1,0.522,0,1)), Vector((1,0.522,0,0.5)))
+brushFalloff = BrushFalloff()
 
 tweakCore = TweakCore()
 
@@ -12,6 +13,11 @@ class Tweak(bpy.types.Operator):
     bl_idname = "shortcut_collection.topology_display_tweak"
     bl_label = "TopologyDisplayTweak"
     bl_options = {'REGISTER', "UNDO"}  
+
+    @classmethod
+    def poll(cls, context):
+        sourcesObjs =  [obj for obj in get_visible_objs(context) if obj != context.active_object]
+        return len(sourcesObjs) > 0
 
     def invoke(self, context, event):
         self.lmb = False
@@ -37,7 +43,6 @@ class Tweak(bpy.types.Operator):
         if self.act.mode != "EDIT":
             brushFalloff.close()
             return {"FINISHED"}
-        
         if self.f_press:
             if event.type == "F" and event.value == 'RELEASE':
                 self.f_press = False
@@ -62,9 +67,6 @@ class Tweak(bpy.types.Operator):
             if self.lmb:
                 tweakCore.drag(
                     Vector((event.mouse_region_x, event.mouse_region_y)), 
-                    brushFalloff.radius, 
-                    brushFalloff.falloff, 
-                    brushFalloff.strength,
                     brushFalloff.scale
                 )                
             context.area.tag_redraw()
@@ -72,7 +74,7 @@ class Tweak(bpy.types.Operator):
         elif event.type == 'LEFTMOUSE':
             self.lmb = event.value == 'PRESS'
             if event.value == 'PRESS':
-                tweakCore.click(Vector((event.mouse_region_x, event.mouse_region_y)), brushFalloff.radius, brushFalloff.scale)
+                tweakCore.click(Vector((event.mouse_region_x, event.mouse_region_y)), brushFalloff.scale)
             if event.value == 'RELEASE':
                 self.lmb = False
                 context.area.tag_redraw()
@@ -86,7 +88,10 @@ class Tweak(bpy.types.Operator):
             brushFalloff.update_start(Vector((event.mouse_region_x, event.mouse_region_y)))
             return {"RUNNING_MODAL"}
 
-        if event.type == "RIGHTMOUSE":
+        elif event.type == "RIGHTMOUSE":
+            brushFalloff.update_center()
+            context.area.tag_redraw()
+        if event.type == "ESC":
             context.space_data.show_gizmo_context  = self.gizmo
             brushFalloff.close()
             context.area.tag_redraw()

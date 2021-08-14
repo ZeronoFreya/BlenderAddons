@@ -6,6 +6,8 @@ from math import pow as mPow
 from mathutils.bvhtree import BVHTree
 from bpy_extras.view3d_utils import (region_2d_to_origin_3d, region_2d_to_vector_3d, location_3d_to_region_2d)
 
+from ...utils.addon import get_visible_objs
+
 def getBVHTree(objs, depsgraph, applyModifiers=True, world_space=True):
     if len(objs) == 0: return None
     bm = bmesh.new()
@@ -45,11 +47,12 @@ def getBVHTree(objs, depsgraph, applyModifiers=True, world_space=True):
         return BVHTree.FromPolygons(vertices, polygons)
                 
 
-def sourcesBVHTree(act, depsgraph, sourcesObjs=None):
+def sourcesBVHTree(context, act, depsgraph, sourcesObjs=None):
     """获取目标物体的BVHTree"""
     if not act: return None
     if not sourcesObjs:
-        sourcesObjs =  [obj for obj in bpy.data.objects if (obj.type == "MESH" and obj != act)]
+        # sourcesObjs =  [obj for obj in bpy.data.objects if (obj.type == "MESH" and obj != act)]
+        sourcesObjs =  [obj for obj in get_visible_objs(context) if obj != act]
     if not isinstance(sourcesObjs, list):
         sourcesObjs = [sourcesObjs]
     if(len(sourcesObjs) == 0): return None
@@ -72,10 +75,8 @@ def vertsInRadius(act, point, radius, onlySelect=False):
         if not bmv.is_valid: continue
         bmv_world = matrix_world @ bmv.co
         d3d = (bmv_world - point).length
-        # print(bmv_world, point, d3d, radius)
         if d3d > radius: continue
         nearest.append((bmv, d3d))
-    # print(nearest)
     return nearest
 
 
@@ -92,8 +93,9 @@ class TweakCore:
         self.rgn = context.region
         self.r3d = context.space_data.region_3d
         self.depsgraph = context.evaluated_depsgraph_get()
-        self.sourcesBvh = sourcesBVHTree(self.act, self.depsgraph)
+        self.sourcesBvh = sourcesBVHTree(context, self.act, self.depsgraph)
         self.matrix_i = self.act.matrix_world.inverted()
+        self.prefs = context.preferences.addons["shortcut_collection"].preferences
     
     def get_ray(self, region_2d):
         origin = region_2d_to_origin_3d(self.rgn, self.r3d, region_2d)
@@ -124,18 +126,20 @@ class TweakCore:
         self.verts = vertsInRadius(self.act, p, radius) if p else None
         return self.verts
     
-    def click(self, mouse, radius, scale):
+    def click(self, mouse, scale):
         self.mouse = mouse
-        self.pendingVerts(mouse, radius * scale)
+        verts = self.pendingVerts(mouse, self.prefs.topo_tweak_radius * scale)
+        if not verts: return
+        bpy.ops.mesh.select_all(action='DESELECT')
+        for v,_ in verts:
+            v.select = True
     
-    def drag(self, mouse, radius, falloff, strength, scale):
+    def drag(self, mouse, scale):
         delta = mouse - self.mouse
         self.mouse = mouse
-        # print(radius, falloff, strength)
         if not self.verts: return None
         for v, d in self.verts:
-            offset = max(0.0, min(1.0, (1.0 - mPow(d / (radius * scale), falloff)))) * strength * delta
-            # offset = delta
+            offset = max(0.0, min(1.0, (1.0 - mPow(d / (self.prefs.topo_tweak_radius * scale), self.prefs.topo_tweak_falloff)))) * self.prefs.topo_tweak_strength * delta
             self.setVert(v, offset)
         bmesh.update_edit_mesh(self.act.data, loop_triangles=False, destructive=False)
         self.act.data.update()

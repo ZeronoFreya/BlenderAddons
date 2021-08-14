@@ -1,4 +1,6 @@
+
 from .. import utils
+from .tweak.brushfalloff import BrushFalloff
 
 def panelDraw(context, object, layout):
     if(object.mode == "EDIT"):
@@ -22,3 +24,6 @@ def panelDraw(context, object, layout):
 
         row = layout.row()
         row.operator("shortcut_collection.topology_display_tweak", text="tweak")
+
+
+

@@ -2,6 +2,7 @@ import bpy
 from . import icons
 from . import ui
 from . import utils
+from . import preferences
 
 from .modules import modules
 
@@ -10,6 +11,7 @@ baseModules = (
     icons,
     ui,
     utils,
+    preferences,
 )
 
 
