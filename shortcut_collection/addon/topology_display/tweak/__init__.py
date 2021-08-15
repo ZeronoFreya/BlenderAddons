@@ -34,7 +34,7 @@ class Tweak(bpy.types.Operator):
         brushFalloff.show()
 
         self.update = brushFalloff.update_radius
-         
+
         context.window_manager.modal_handler_add(self)
 
         return {'RUNNING_MODAL'}
@@ -60,7 +60,6 @@ class Tweak(bpy.types.Operator):
             return {"RUNNING_MODAL"}
 
         
-        
         if event.type == 'MOUSEMOVE':
             p,n,i,d = tweakCore.ray_cast_sources(Vector((event.mouse_region_x, event.mouse_region_y)))
             brushFalloff.update_center( p, n)
@@ -70,17 +69,19 @@ class Tweak(bpy.types.Operator):
                     brushFalloff.scale
                 )                
             context.area.tag_redraw()
+            self.firstRun = True
             return {"RUNNING_MODAL"}
         elif event.type == 'LEFTMOUSE':
             self.lmb = event.value == 'PRESS'
             if event.value == 'PRESS':
                 tweakCore.click(Vector((event.mouse_region_x, event.mouse_region_y)), brushFalloff.scale)
             if event.value == 'RELEASE':
+                bpy.ops.ed.undo_push(message="创建历史记录")
                 self.lmb = False
                 context.area.tag_redraw()
             return {"RUNNING_MODAL"}
-        # elif event.type == 'WHEELDOWNMOUSE' or event.type == 'WHEELUPMOUSE':
-        #     brushFalloff.update_scale(p)
+        elif event.type == 'WHEELDOWNMOUSE' or event.type == 'WHEELUPMOUSE':
+            return {"PASS_THROUGH"}
         elif event.type == "F":
             self.lmb = False
             self.f_press = True
@@ -88,15 +89,18 @@ class Tweak(bpy.types.Operator):
             brushFalloff.update_start(Vector((event.mouse_region_x, event.mouse_region_y)))
             return {"RUNNING_MODAL"}
 
-        elif event.type == "RIGHTMOUSE":
-            brushFalloff.update_center()
-            context.area.tag_redraw()
+        # elif event.type == "RIGHTMOUSE":
+        #     brushFalloff.update_center()
+        #     context.area.tag_redraw()
+
         if event.type == "ESC":
             context.space_data.show_gizmo_context  = self.gizmo
             brushFalloff.close()
             context.area.tag_redraw()
             return {"FINISHED"}
 
+        brushFalloff.update_center()
+        context.area.tag_redraw()
         return {"PASS_THROUGH"}
 
 addon_keymaps = []
